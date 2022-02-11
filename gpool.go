@@ -74,7 +74,7 @@ func (p *Pool) Status() *PoolStatus {
 	stat.Waiting = len(p.wantQueue)
 	p.idleMu.Unlock()
 
-	stat.ReuseRate = float32(atomic.LoadInt64(&p.hit)) / float32(atomic.LoadInt64(&p.total))
+	stat.ReuseRate = float32(atomic.LoadInt64(&p.hit)) / float32(atomic.LoadInt64(&p.total)+1)
 
 	return stat
 }

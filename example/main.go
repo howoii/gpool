@@ -1,30 +1,36 @@
 package main
 
 import (
+	"fmt"
 	"math"
-	"sync"
+	"net/http"
+	_ "net/http/pprof"
 	"time"
 
 	"github.com/howoii/gpool"
 )
 
-const (
-	RunTimes = 100
-)
-
 func demoFunc() {
 	math.Sin(math.Pi / 4)
-	time.Sleep(time.Duration(10) * time.Millisecond)
 }
 
 func main() {
-	var wg sync.WaitGroup
-	for i := 0; i < RunTimes; i++ {
-		wg.Add(1)
-		gpool.Run(func() {
-			defer wg.Done()
-			demoFunc()
-		})
-	}
-	wg.Wait()
+	go func() {
+		for {
+			gpool.Run(demoFunc)
+		}
+	}()
+
+	go func() {
+		ticker := time.NewTicker(time.Duration(1) * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				fmt.Printf("%#v\n", gpool.Status())
+			}
+		}
+	}()
+
+	http.ListenAndServe("0.0.0.0:6060", nil)
 }
